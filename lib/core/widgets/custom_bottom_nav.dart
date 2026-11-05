@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kube/features/track/ui/track_screen.dart';
 import '../../features/home/ui/home_screen.dart';
 import '../../features/order/ui/order_screen.dart';
 import '../../features/history/ui/history_screen.dart';
@@ -24,7 +25,7 @@ class CustomBottomNav extends StatelessWidget {
         nextScreen = const OrderScreen();
         break;
       case 2:
-        nextScreen = const Scaffold(body: Center(child: Text('Halaman Lacak')));
+        nextScreen = const TrackingScreen();
         break;
       case 3:
         nextScreen = const HistoryScreen();
