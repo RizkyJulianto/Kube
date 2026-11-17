@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
-// import 'register_screen.dart';
-// import '../../main/ui/main_screen.dart'; // Ganti dengan path home screen kamu nantinya
+import '../logic/login_logic.dart';
+import 'register_screen.dart';
+import '../../home/ui/home_screen.dart'; 
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,15 +12,39 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
   bool _isPasswordVisible = false;
   bool _isRememberMe = false;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _onLoginPressed() {
+    AuthLogic.handleLogin(
+      context: context,
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      targetScreen: const HomeScreen(),
+      onStartLoading: () => setState(() => _isLoading = true),
+      onStopLoading: () {
+        if (mounted) setState(() => _isLoading = false);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cerulean, // Background atas biru
+      backgroundColor: AppColors.cerulean,
       body: SafeArea(
-        bottom: false, // Biar card putih bisa penuh ke bawah
+        bottom: false,
         child: Column(
           children: [
             // Bagian Atas: Tombol Back & Logo
@@ -34,7 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-            // Logo di tengah
             Image.asset(
               'assets/images/logo-icon.png',
               height: 64,
@@ -79,14 +103,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // Input Email
                       _buildTextField(
+                        controller: _emailController,
                         label: 'Email',
                         hint: 'nama@gmail.com',
                         icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 16),
 
                       // Input Password
                       _buildPasswordField(
+                        controller: _passwordController,
                         label: 'Kata Sandi',
                         hint: '••••••••',
                         isVisible: _isPasswordVisible,
@@ -124,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Aksi ketika Lupa Kata Sandi ditekan
+                              // TODO: Tambahkan fitur reset password jika diperlukan
                             },
                             child: const Text(
                               'Lupa Kata Sandi?',
@@ -151,18 +178,24 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: () {
-                            // Simulasi Login: Hapus semua tumpukan halaman Auth dan langsung masuk ke MainScreen (Beranda)
-                            // Navigator.pushAndRemoveUntil(
-                            //   context,
-                            //   MaterialPageRoute(builder: (context) => const MainScreen()),
-                            //   (route) => false,
-                            // );
-                          },
-                          child: const Text(
-                            'Masuk',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.white),
-                          ),
+                          onPressed: _isLoading ? null : _onLoginPressed,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Masuk',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.white,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -203,12 +236,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Ganti halaman saat ini menjadi RegisterScreen
-                              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                              );
                             },
                             child: const Text(
                               'Daftar',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.cerulean),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.cerulean,
+                              ),
                             ),
                           ),
                         ],
@@ -225,14 +264,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Helper Input Field Biasa
-  Widget _buildTextField({required String label, required String hint, required IconData icon}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.black100)),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(fontSize: 13, color: AppColors.black50),
@@ -252,8 +298,8 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Helper Input Field Password
   Widget _buildPasswordField({
+    required TextEditingController controller,
     required String label,
     required String hint,
     required bool isVisible,
@@ -265,6 +311,7 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.black100)),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           obscureText: !isVisible,
           decoration: InputDecoration(
             hintText: hint,
@@ -289,7 +336,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Helper Tombol Sosial Media
   Widget _buildSocialButton(String label, IconData iconIcon) {
     return OutlinedButton(
       style: OutlinedButton.styleFrom(

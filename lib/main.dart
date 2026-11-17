@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:kube/features/auth/ui/splash_screen.dart';
-import 'package:kube/features/home/ui/home_screen.dart';
-// import 'features/home/ui/home_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:kube/core/config/supabase_config.dart';
+import 'package:kube/features/auth/ui/splash_screen.dart';
 
-void main() {
+Future<void> main() async {
+  
+  WidgetsFlutterBinding.ensureInitialized();
+
+  
+  await Supabase.initialize(
+    url: SupabaseConfig.url,
+    publishableKey: SupabaseConfig.publishableKey,
+  );
+
   runApp(const MyApp());
 }
 
@@ -19,10 +28,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF8FAFC),
-
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(Theme.of(context).textTheme)
+        textTheme: GoogleFonts.plusJakartaSansTextTheme(Theme.of(context).textTheme),
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }

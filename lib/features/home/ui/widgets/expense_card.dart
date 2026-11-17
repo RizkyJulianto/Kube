@@ -3,7 +3,30 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../theme/app_colors.dart';
 
 class ExpenseCard extends StatelessWidget {
-  const ExpenseCard({super.key});
+  final num totalAmount;
+  final int totalQty;
+  final VoidCallback? onDetailTap;
+
+  const ExpenseCard({
+    super.key,
+    this.totalAmount = 0,
+    this.totalQty = 0,
+    this.onDetailTap,
+  });
+
+  String _formatRupiah(num amount) {
+    final intVal = amount.round();
+    final str = intVal.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      final reverseIndex = str.length - i;
+      if (i > 0 && reverseIndex % 3 == 0) {
+        buffer.write('.');
+      }
+      buffer.write(str[i]);
+    }
+    return 'Rp. $buffer';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,15 +40,15 @@ class ExpenseCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.credit_card,
                 size: 20,
                 color: AppColors.cerulean,
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'Pengeluaran Bulan Ini',
                 style: TextStyle(
                   fontSize: 13,
@@ -40,44 +63,46 @@ class ExpenseCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Rp. 2.250.000',
-                    style: GoogleFonts.inter(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.black100,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _formatRupiah(totalAmount),
+                      style: GoogleFonts.inter(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.black100,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 4),
-                  const Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'Total : ',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.black70, // Opacity 70% + Bold
+                    const SizedBox(height: 4),
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          const TextSpan(
+                            text: 'Total : ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.black70,
+                            ),
                           ),
-                        ),
-                        TextSpan(
-                          text: '150 Sak Es Kristal',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.normal,
-                            color: AppColors.black50, // Opacity 50% + Regular
+                          TextSpan(
+                            text: '$totalQty Sak Es Kristal',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.normal,
+                              color: AppColors.black50,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               OutlinedButton(
-                onPressed: () {},
+                onPressed: onDetailTap,
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: AppColors.cerulean),
                   shape: RoundedRectangleBorder(

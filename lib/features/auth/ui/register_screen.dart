@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../theme/app_colors.dart';
-// import 'login_screen.dart';
+import '../logic/register_logic.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,16 +12,45 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isAgreed = false;
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _onRegisterPressed() {
+    AuthLogic.handleRegister(
+      context: context,
+      fullName: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      confirmPassword: _confirmPasswordController.text.trim(),
+      onStartLoading: () => setState(() => _isLoading = true),
+      onStopLoading: () {
+        if (mounted) setState(() => _isLoading = false);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.cerulean, // Background atas biru
+      backgroundColor: AppColors.cerulean,
       body: SafeArea(
-        bottom: false, // Biar card putih bisa penuh ke bawah
+        bottom: false,
         child: Column(
           children: [
             // Bagian Atas: Tombol Back & Logo
@@ -35,7 +65,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
               ),
             ),
-            // Logo di tengah
             Image.asset(
               'assets/images/logo-icon.png',
               height: 64,
@@ -55,11 +84,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     topRight: Radius.circular(32),
                   ),
                 ),
-                child: SingleChildScrollView( // Agar tidak overflow saat keyboard muncul
+                child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                       Text(
+                      Text(
                         'Buat Akun',
                         style: GoogleFonts.inter(
                           fontSize: 24,
@@ -78,16 +107,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 24),
 
+                      // Input Nama Lengkap
+                      _buildTextField(
+                        controller: _nameController,
+                        label: 'Nama Lengkap',
+                        hint: 'Contoh: Rizky Julianto',
+                        icon: Icons.person_outline_rounded,
+                      ),
+                      const SizedBox(height: 16),
+
                       // Input Email
                       _buildTextField(
+                        controller: _emailController,
                         label: 'Email',
                         hint: 'nama@gmail.com',
                         icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 16),
 
                       // Input Password
                       _buildPasswordField(
+                        controller: _passwordController,
                         label: 'Kata Sandi',
                         hint: '••••••••',
                         isVisible: _isPasswordVisible,
@@ -99,6 +140,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                       // Input Konfirmasi Password
                       _buildPasswordField(
+                        controller: _confirmPasswordController,
                         label: 'Konfirmasi Kata Sandi',
                         hint: '••••••••',
                         isVisible: _isConfirmPasswordVisible,
@@ -133,7 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Tombol Daftar
+                      // Tombol Daftar (Memanggil _onRegisterPressed)
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -145,11 +187,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: _isAgreed ? () {} : null, // Disable jika belum centang
-                          child: const Text(
-                            'Daftar',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.white),
-                          ),
+                          onPressed: (_isAgreed && !_isLoading) ? _onRegisterPressed : null,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Daftar',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.white,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -190,11 +245,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           GestureDetector(
                             onTap: () {
-                              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                              );
                             },
                             child: const Text(
                               'Masuk',
-                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.cerulean),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.cerulean,
+                              ),
                             ),
                           ),
                         ],
@@ -211,14 +273,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Helper Input Field Biasa
-  Widget _buildTextField({required String label, required String hint, required IconData icon}) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.black100)),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(fontSize: 13, color: AppColors.black50),
@@ -238,8 +307,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Helper Input Field Password
   Widget _buildPasswordField({
+    required TextEditingController controller,
     required String label,
     required String hint,
     required bool isVisible,
@@ -251,6 +320,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.black100)),
         const SizedBox(height: 8),
         TextField(
+          controller: controller,
           obscureText: !isVisible,
           decoration: InputDecoration(
             hintText: hint,
@@ -275,7 +345,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // Helper Tombol Sosial Media
   Widget _buildSocialButton(String label, String imagePath, {IconData? iconIcon}) {
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
@@ -287,11 +356,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (iconIcon != null) 
+          if (iconIcon != null)
             Icon(iconIcon, color: AppColors.black100, size: 20)
-          else 
-            // Jika kamu belum punya aset logo google, ini akan error, ganti dengan Icon(Icons.g_mobiledata) sementara jika perlu
-            const Icon(Icons.g_mobiledata, color: AppColors.black100, size: 24), // Fallback icon
+          else
+            const Icon(Icons.g_mobiledata, color: AppColors.black100, size: 24),
           const SizedBox(width: 8),
           Text(
             label,
