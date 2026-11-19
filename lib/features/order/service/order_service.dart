@@ -4,11 +4,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class OrderService {
   static final SupabaseClient _client = Supabase.instance.client;
 
-  /// Mengambil daftar produk aktif
+  /// Mengambil daftar produk aktif beserta informasi stok terbaru
   static Future<List> getProducts() async {
     final res = await _client
         .from('products')
         .select()
+        .eq('is_active', true)
         .order('id', ascending: true);
 
     return (res as List)
@@ -44,29 +45,71 @@ class OrderService {
         .toList();
   }
 
-  /// Alias jika dipanggil dengan nama getSavedAddresses
   static Future<List> getSavedAddresses() =>
       getConsumerAddresses();
 
-  /// Menambahkan alamat baru milik mitra ke tabel consumer_addresses
+  /// Helper untuk menyinkronkan alamat utama ke tabel consumer_profiles
+  static Future<void> syncPrimaryProfileAddress({
+    String? cafeName,
+    required String? address,
+    double? latitude,
+    double? longitude,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return;
+
+    final existing = await _client
+        .from('consumer_profiles')
+        .select('id, cafe_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+    final payload = <String, dynamic>{
+      'address': address,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+
+    if (cafeName != null) {
+      payload['cafe_name'] = cafeName;
+    }
+
+    if (existing != null) {
+      await _client
+          .from('consumer_profiles')
+          .update(payload)
+          .eq('user_id', user.id);
+    } else {
+      await _client.from('consumer_profiles').insert({
+        'user_id': user.id,
+        ...payload,
+      });
+    }
+  }
+
+  /// Tambah alamat baru & otomatis jadikan alamat utama untuk Order dan Profil
   static Future addConsumerAddress({
     required String label,
     required String address,
     double? latitude,
     double? longitude,
+    bool setAsPrimaryProfile = true,
   }) async {
     final user = _client.auth.currentUser;
     if (user == null) {
       throw Exception('Sesi pengguna tidak ditemukan. Silakan login ulang.');
     }
 
+    final cleanLabel = label.trim();
+    final cleanAddress = address.trim();
+
     final payload = <String, dynamic>{
       'user_id': user.id,
-      'label': label.trim(),
-      'address': address.trim(),
+      'label': cleanLabel,
+      'address': cleanAddress,
+      'latitude': latitude,
+      'longitude': longitude,
     };
-    if (latitude != null) payload['latitude'] = latitude;
-    if (longitude != null) payload['longitude'] = longitude;
 
     final res = await _client
         .from('consumer_addresses')
@@ -74,10 +117,18 @@ class OrderService {
         .select()
         .single();
 
+    if (setAsPrimaryProfile) {
+      await syncPrimaryProfileAddress(
+        cafeName: cleanLabel,
+        address: cleanAddress,
+        latitude: latitude,
+        longitude: longitude,
+      );
+    }
+
     return Map<String, dynamic>.from(res as Map);
   }
 
-  /// Alias jika dipanggil dengan nama addSavedAddress
   static Future addSavedAddress({
     required String label,
     required String address,
@@ -89,17 +140,116 @@ class OrderService {
         address: address,
         latitude: latitude,
         longitude: longitude,
+        setAsPrimaryProfile: true,
       );
 
-  /// Menghapus alamat tersimpan milik mitra
-  static Future<void> deleteConsumerAddress(dynamic addressId) async {
-    await _client.from('consumer_addresses').delete().eq('id', addressId);
+  /// Ubah alamat (jika addressId == null, berarti berasal dari profil lama -> simpan ke consumer_addresses)
+  static Future updateConsumerAddress({
+    String? addressId,
+    required String label,
+    required String address,
+    double? latitude,
+    double? longitude,
+    required bool isPrimaryProfile,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Sesi pengguna tidak ditemukan. Silakan login ulang.');
+    }
+
+    final cleanLabel = label.trim();
+    final cleanAddress = address.trim();
+
+    Map<String, dynamic> resultMap;
+
+    if (addressId != null && addressId.isNotEmpty) {
+      final res = await _client
+          .from('consumer_addresses')
+          .update({
+            'label': cleanLabel,
+            'address': cleanAddress,
+            'latitude': latitude,
+            'longitude': longitude,
+          })
+          .eq('id', addressId)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+      resultMap = Map<String, dynamic>.from(res as Map);
+    } else {
+      // Migrasi alamat lama yang sebelumnya hanya ada di consumer_profiles ke consumer_addresses
+      final res = await _client
+          .from('consumer_addresses')
+          .insert({
+            'user_id': user.id,
+            'label': cleanLabel,
+            'address': cleanAddress,
+            'latitude': latitude,
+            'longitude': longitude,
+          })
+          .select()
+          .single();
+      resultMap = Map<String, dynamic>.from(res as Map);
+    }
+
+    if (isPrimaryProfile) {
+      await syncPrimaryProfileAddress(
+        cafeName: cleanLabel,
+        address: cleanAddress,
+        latitude: latitude,
+        longitude: longitude,
+      );
+    }
+
+    return resultMap;
+  }
+
+  /// Hapus alamat; jika yang dihapus adalah alamat utama profil, otomatis update/kosongkan profil
+  static Future<void> deleteConsumerAddress({
+    String? addressId,
+    required bool isPrimaryProfile,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null) {
+      throw Exception('Sesi pengguna tidak ditemukan. Silakan login ulang.');
+    }
+
+    if (addressId != null && addressId.isNotEmpty) {
+      await _client
+          .from('consumer_addresses')
+          .delete()
+          .eq('id', addressId)
+          .eq('user_id', user.id);
+    }
+
+    if (isPrimaryProfile) {
+      // Cek apakah masih ada alamat lain di consumer_addresses
+      final remaining = await getConsumerAddresses();
+      if (remaining.isNotEmpty) {
+        final nextPrimary = remaining.first;
+        await syncPrimaryProfileAddress(
+          cafeName: (nextPrimary['label'] ?? '').toString(),
+          address: (nextPrimary['address'] ?? '').toString(),
+          latitude: (nextPrimary['latitude'] as num?)?.toDouble(),
+          longitude: (nextPrimary['longitude'] as num?)?.toDouble(),
+        );
+      } else {
+        // Kosongkan alamat & koordinat di consumer_profiles
+        await syncPrimaryProfileAddress(
+          address: null,
+          latitude: null,
+          longitude: null,
+        );
+      }
+    }
   }
 
   static Future<void> deleteSavedAddress(dynamic addressId) =>
-      deleteConsumerAddress(addressId);
+      deleteConsumerAddress(
+        addressId: addressId?.toString(),
+        isPrimaryProfile: false,
+      );
 
-  /// Membuat pesanan baru beserta item-itemnya ke tabel orders dan order_items
   static Future createOrder({
     required dynamic paymentMethodId,
     required num totalAmount,
@@ -108,11 +258,48 @@ class OrderService {
     required String deliveryType, // 'instant' atau 'scheduled'
     String? scheduledTime,
     String? notes,
-    required List items,
+    required List<dynamic> items,
   }) async {
     final user = _client.auth.currentUser;
     if (user == null) {
       throw Exception('Sesi pengguna tidak ditemukan. Silakan login ulang.');
+    }
+
+    if (items.isEmpty) {
+      throw Exception('Pilih minimal 1 produk sebelum memesan.');
+    }
+
+    final productIds = items.map((e) => e['product_id']).toList();
+    final latestProductsRes = await _client
+        .from('products')
+        .select('id, name, stock, is_active')
+        .inFilter('id', productIds);
+
+    final Map<dynamic, Map<String, dynamic>> latestProductMap = {
+      for (final p in (latestProductsRes as List))
+        p['id']: Map<String, dynamic>.from(p as Map),
+    };
+
+    for (final item in items) {
+      final pid = item['product_id'];
+      final requestedQty = (item['quantity'] as num?)?.toInt() ?? 0;
+      final prod = latestProductMap[pid];
+
+      if (prod == null || prod['is_active'] == false) {
+        throw Exception('Salah satu produk sudah tidak tersedia.');
+      }
+
+      final currentStock = (prod['stock'] as num?)?.toInt() ?? 0;
+      final prodName = (prod['name'] ?? 'Produk').toString();
+
+      if (currentStock <= 0) {
+        throw Exception('Stok "$prodName" sudah habis.');
+      }
+      if (requestedQty > currentStock) {
+        throw Exception(
+          'Stok "$prodName" tidak mencukupi (tersisa $currentStock sak).',
+        );
+      }
     }
 
     final now = DateTime.now();
@@ -140,16 +327,13 @@ class OrderService {
       orderPayload['notes'] = notes.trim();
     }
 
-    final insertedOrder = await _client
-        .from('orders')
-        .insert(orderPayload)
-        .select()
-        .single();
+    final insertedOrder =
+        await _client.from('orders').insert(orderPayload).select().single();
 
     final orderMap = Map<String, dynamic>.from(insertedOrder as Map);
     final dbOrderId = orderMap['id'];
 
-    if (items.isNotEmpty) {
+    try {
       final orderItemsPayload = items.map((item) {
         final qty = (item['quantity'] as num?) ?? 0;
         final price = (item['price_per_unit'] as num?) ?? 0;
@@ -164,6 +348,12 @@ class OrderService {
       }).toList();
 
       await _client.from('order_items').insert(orderItemsPayload);
+    } on PostgrestException catch (e) {
+      await _client.from('orders').delete().eq('id', dbOrderId);
+      throw Exception(e.message);
+    } catch (e) {
+      await _client.from('orders').delete().eq('id', dbOrderId);
+      rethrow;
     }
 
     return orderMap;

@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
-import '../../../../theme/app_colors.dart';
 import '../../../../core/widgets/custom_bottom_nav.dart';
+import '../../../../theme/app_colors.dart';
+import '../../notification/service/notification_service.dart';
+import '../../notification/ui/notification_screen.dart';
 import '../../profile/service/profile_service.dart';
 import '../../profile/ui/profile_screen.dart';
 import '../service/home_service.dart';
 
-import 'widgets/quick_reorder_card.dart';
 import 'widgets/expense_card.dart';
-import 'widgets/tracking_card.dart';
-import 'widgets/support_card.dart';
 import 'widgets/operational_tips_card.dart';
+import 'widgets/quick_reorder_card.dart';
+import 'widgets/support_card.dart';
+import 'widgets/tracking_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State {
+class _HomeScreenState extends State<HomeScreen> {
   String _userName = 'Mitra Kube';
   String _initials = 'MK';
   Map? _lastOrder;
@@ -32,14 +34,14 @@ class _HomeScreenState extends State {
     _loadDashboardData();
   }
 
-  Future _loadDashboardData() async {
+  Future<void> _loadDashboardData() async {
     await Future.wait([
       _loadUserHeader(),
       _loadSummary(),
     ]);
   }
 
-  Future _loadUserHeader() async {
+  Future<void> _loadUserHeader() async {
     try {
       final data = await ProfileService.getMitraProfile();
       final user = data['user'] as Map;
@@ -53,7 +55,7 @@ class _HomeScreenState extends State {
     } catch (_) {}
   }
 
-  Future _loadSummary() async {
+  Future<void> _loadSummary() async {
     try {
       final summary = await HomeService.getHomeSummary();
       if (!mounted) return;
@@ -92,7 +94,7 @@ class _HomeScreenState extends State {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              // Header Logo & Profile
+              // Header Logo, Notifikasi & Profile
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -131,7 +133,92 @@ class _HomeScreenState extends State {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
+
+                  // Ikon Lonceng Notifikasi + Badge Real-Time
+                  StreamBuilder<int>(
+                    stream: NotificationService.unreadCountStream(),
+                    builder: (context, snapshot) {
+                      final unreadCount = snapshot.data ?? 0;
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const NotificationScreen(),
+                            ),
+                          );
+                        },
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.cerulean.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.notifications_none_rounded,
+                                  color: AppColors.cerulean,
+                                  size: 22,
+                                ),
+                              ),
+                            ),
+                            if (unreadCount > 0)
+                              Positioned(
+                                top: -2,
+                                right: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 2,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 18,
+                                    minHeight: 18,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    shape: unreadCount < 10
+                                        ? BoxShape.circle
+                                        : BoxShape.rectangle,
+                                    borderRadius: unreadCount >= 10
+                                        ? BorderRadius.circular(9)
+                                        : null,
+                                    border: Border.all(
+                                      color: AppColors.white,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      unreadCount > 99
+                                          ? '99+'
+                                          : '$unreadCount',
+                                      style: const TextStyle(
+                                        color: AppColors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // Avatar Profil
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -148,7 +235,7 @@ class _HomeScreenState extends State {
                         color: AppColors.pattensBlue,
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: AppColors.cerulean.withOpacity(0.3),
+                          color: AppColors.cerulean.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Center(

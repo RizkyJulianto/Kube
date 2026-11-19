@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../logic/login_logic.dart';
+import '../service/auth_service.dart';
 import 'register_screen.dart';
-import '../../home/ui/home_screen.dart'; 
+import '../../home/ui/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -39,6 +40,21 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  void _showForgotPasswordSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _ForgotPasswordSheet(
+        initialEmail: _emailController.text.trim(),
+        rootMessenger: ScaffoldMessenger.of(context),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,7 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.white, size: 20),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: AppColors.white,
+                      size: 20,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -70,7 +90,8 @@ class _LoginScreenState extends State<LoginScreen> {
             Expanded(
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 decoration: const BoxDecoration(
                   color: AppColors.white,
                   borderRadius: BorderRadius.only(
@@ -118,7 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         hint: '••••••••',
                         isVisible: _isPasswordVisible,
                         onVisibilityChanged: () {
-                          setState(() => _isPasswordVisible = !_isPasswordVisible);
+                          setState(
+                              () => _isPasswordVisible = !_isPasswordVisible);
                         },
                       ),
                       const SizedBox(height: 12),
@@ -135,24 +157,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: Checkbox(
                                   value: _isRememberMe,
                                   activeColor: AppColors.cerulean,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                   side: const BorderSide(color: AppColors.alto),
                                   onChanged: (val) {
-                                    setState(() => _isRememberMe = val ?? false);
+                                    setState(
+                                        () => _isRememberMe = val ?? false);
                                   },
                                 ),
                               ),
                               const SizedBox(width: 8),
                               const Text(
                                 'Ingat saya',
-                                style: TextStyle(fontSize: 12, color: AppColors.black70),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: AppColors.black70,
+                                ),
                               ),
                             ],
                           ),
                           GestureDetector(
-                            onTap: () {
-                              // TODO: Tambahkan fitur reset password jika diperlukan
-                            },
+                            onTap: _showForgotPasswordSheet,
                             child: const Text(
                               'Lupa Kata Sandi?',
                               style: TextStyle(
@@ -164,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
 
                       // Tombol Masuk
                       SizedBox(
@@ -200,45 +226,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Divider "atau masuk dengan"
-                      Row(
-                        children: const [
-                          Expanded(child: Divider(color: AppColors.alto, thickness: 1)),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'atau masuk dengan',
-                              style: TextStyle(fontSize: 12, color: AppColors.black50),
-                            ),
-                          ),
-                          Expanded(child: Divider(color: AppColors.alto, thickness: 1)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Tombol Google & Apple
-                      Row(
-                        children: [
-                          Expanded(child: _buildSocialButton('Google', Icons.g_mobiledata)),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildSocialButton('Apple', Icons.apple)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
                       // Link ke Daftar
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
                             'Belum punya akun? ',
-                            style: TextStyle(fontSize: 13, color: AppColors.black50),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.black50,
+                            ),
                           ),
                           GestureDetector(
                             onTap: () {
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                                MaterialPageRoute(
+                                  builder: (context) => const RegisterScreen(),
+                                ),
                               );
                             },
                             child: const Text(
@@ -274,7 +279,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.black100)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: AppColors.black100,
+          ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
@@ -308,7 +320,14 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.black100)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: AppColors.black100,
+          ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
@@ -316,9 +335,19 @@ class _LoginScreenState extends State<LoginScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(fontSize: 13, color: AppColors.black50),
-            prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.black50, size: 20),
+            prefixIcon: const Icon(
+              Icons.lock_outline_rounded,
+              color: AppColors.black50,
+              size: 20,
+            ),
             suffixIcon: IconButton(
-              icon: Icon(isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.black50, size: 20),
+              icon: Icon(
+                isVisible
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: AppColors.black50,
+                size: 20,
+              ),
               onPressed: onVisibilityChanged,
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -335,25 +364,197 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
+}
 
-  Widget _buildSocialButton(String label, IconData iconIcon) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        side: const BorderSide(color: AppColors.alto),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      onPressed: () {},
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(iconIcon, color: AppColors.black100, size: 24),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.black100),
+class _ForgotPasswordSheet extends StatefulWidget {
+  final String initialEmail;
+  final ScaffoldMessengerState rootMessenger;
+
+  const _ForgotPasswordSheet({
+    required this.initialEmail,
+    required this.rootMessenger,
+  });
+
+  @override
+  State<_ForgotPasswordSheet> createState() => _ForgotPasswordSheetState();
+}
+
+class _ForgotPasswordSheetState extends State<_ForgotPasswordSheet> {
+  late final TextEditingController _resetEmailController;
+  bool _isSubmitting = false;
+  String? _errorMsg;
+
+  @override
+  void initState() {
+    super.initState();
+    _resetEmailController = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _resetEmailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final targetEmail = _resetEmailController.text.trim();
+    if (targetEmail.isEmpty || !targetEmail.contains('@')) {
+      setState(() => _errorMsg = 'Masukkan alamat email yang valid.');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+      _errorMsg = null;
+    });
+
+    try {
+      await AuthService.sendPasswordResetEmail(targetEmail);
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      widget.rootMessenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Tautan reset kata sandi telah dikirim! Silakan buka email Anda dan klik tautan tersebut.',
           ),
-        ],
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _errorMsg = 'Gagal mengirim tautan pemulihan: $e';
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Lupa Kata Sandi',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.black100,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: AppColors.black50),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Masukkan email akun terdaftar Anda. Kami akan mengirimkan tautan pemulihan untuk mengatur ulang kata sandi.',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.black50,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 18),
+            if (_errorMsg != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: Colors.red.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Text(
+                  _errorMsg!,
+                  style: const TextStyle(fontSize: 12, color: Colors.red),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
+            const Text(
+              'Email Terdaftar',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppColors.black100,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _resetEmailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                hintText: 'nama@gmail.com',
+                hintStyle:
+                    const TextStyle(fontSize: 13, color: AppColors.black50),
+                prefixIcon: const Icon(
+                  Icons.email_outlined,
+                  color: AppColors.black50,
+                  size: 20,
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.alto),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.cerulean),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.cerulean,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _isSubmitting ? null : _submit,
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: AppColors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Kirim Tautan Pemulihan',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

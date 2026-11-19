@@ -251,13 +251,24 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
   @override
   Widget build(BuildContext context) {
     final payName = (widget.paymentMethod['name'] ?? 'Tunai').toString();
-    final payCode = (widget.paymentMethod['code'] ?? '').toString().toUpperCase();
+    final payCode =
+        (widget.paymentMethod['code'] ?? '').toString().toUpperCase();
     final accountNumber =
         (widget.paymentMethod['account_number'] ?? '').toString().trim();
-    final accountHolder =
-        (widget.paymentMethod['account_holder'] ?? '').toString().trim();
-    final qrisUrl =
+    final accountHolder = (widget.paymentMethod['account_name'] ??
+            widget.paymentMethod['account_holder'] ??
+            '')
+        .toString()
+        .trim();
+
+    // Ambil URL QRIS dari qris_image_url (jika ada) atau dari kolom account_number jika berisi URL http
+    final rawQrisUrl =
         (widget.paymentMethod['qris_image_url'] ?? '').toString().trim();
+    final qrisUrl = rawQrisUrl.isNotEmpty
+        ? rawQrisUrl
+        : (accountNumber.startsWith('http')
+            ? accountNumber
+            : 'https://wopqozbstvtuhxkuciun.supabase.co/storage/v1/object/public/qris-kube/qr-kube.png');
 
     final isCod = payCode == 'COD' || payName.toLowerCase().contains('tunai');
     final isQris = payCode == 'QRIS' || payName.toLowerCase().contains('qris');
@@ -612,18 +623,36 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          if (qrisUrl.isNotEmpty)
-                            Center(
+                          Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: AppColors.white,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: AppColors.alto),
+                              ),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(8),
                                 child: Image.network(
                                   qrisUrl,
-                                  height: 220,
-                                  width: 220,
+                                  height: 210,
+                                  width: 210,
                                   fit: BoxFit.contain,
+                                  loadingBuilder: (context, child, progress) {
+                                    if (progress == null) return child;
+                                    return const SizedBox(
+                                      height: 210,
+                                      width: 210,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          color: AppColors.cerulean,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                   errorBuilder: (_, __, ___) => Container(
                                     height: 160,
-                                    width: double.infinity,
+                                    width: 210,
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF8FAFC),
@@ -631,6 +660,7 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
                                     ),
                                     child: const Text(
                                       'Gambar QRIS gagal dimuat',
+                                      textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: AppColors.black50,
@@ -639,16 +669,9 @@ class _OrderSummaryScreenState extends State<OrderSummaryScreen> {
                                   ),
                                 ),
                               ),
-                            )
-                          else
-                            const Text(
-                              'Silakan scan QRIS resmi Kube sesuai total tagihan.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.black70,
-                              ),
                             ),
-                          const SizedBox(height: 8),
+                          ),
+                          const SizedBox(height: 10),
                           const Center(
                             child: Text(
                               'Scan kode QRIS di atas lalu unggah bukti bayar',

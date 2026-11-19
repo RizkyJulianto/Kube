@@ -59,7 +59,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.white, size: 20),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: AppColors.white,
+                      size: 20,
+                    ),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -76,7 +80,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
             Expanded(
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 decoration: const BoxDecoration(
                   color: AppColors.white,
                   borderRadius: BorderRadius.only(
@@ -133,7 +138,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hint: '••••••••',
                         isVisible: _isPasswordVisible,
                         onVisibilityChanged: () {
-                          setState(() => _isPasswordVisible = !_isPasswordVisible);
+                          setState(
+                              () => _isPasswordVisible = !_isPasswordVisible);
                         },
                       ),
                       const SizedBox(height: 16),
@@ -145,7 +151,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         hint: '••••••••',
                         isVisible: _isConfirmPasswordVisible,
                         onVisibilityChanged: () {
-                          setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible);
+                          setState(() => _isConfirmPasswordVisible =
+                              !_isConfirmPasswordVisible);
                         },
                       ),
                       const SizedBox(height: 16),
@@ -159,7 +166,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             child: Checkbox(
                               value: _isAgreed,
                               activeColor: AppColors.cerulean,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                               side: const BorderSide(color: AppColors.alto),
                               onChanged: (val) {
                                 setState(() => _isAgreed = val ?? false);
@@ -167,15 +176,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Text(
-                            'Saya setuju dengan Syarat & Ketentuan',
-                            style: TextStyle(fontSize: 12, color: AppColors.black70),
+                          const Expanded(
+                            child: Text(
+                              'Saya setuju dengan Syarat & Ketentuan',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: AppColors.black70,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
 
-                      // Tombol Daftar (Memanggil _onRegisterPressed)
+                      // Tombol Daftar
                       SizedBox(
                         width: double.infinity,
                         height: 48,
@@ -187,7 +201,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: (_isAgreed && !_isLoading) ? _onRegisterPressed : null,
+                          onPressed: (_isAgreed && !_isLoading)
+                              ? _onRegisterPressed
+                              : null,
                           child: _isLoading
                               ? const SizedBox(
                                   width: 20,
@@ -209,45 +225,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Divider "atau daftar dengan"
-                      Row(
-                        children: const [
-                          Expanded(child: Divider(color: AppColors.alto, thickness: 1)),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'atau daftar dengan',
-                              style: TextStyle(fontSize: 12, color: AppColors.black50),
-                            ),
-                          ),
-                          Expanded(child: Divider(color: AppColors.alto, thickness: 1)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Tombol Google & Apple
-                      Row(
-                        children: [
-                          Expanded(child: _buildSocialButton('Google', 'assets/images/google_icon.png')),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildSocialButton('Apple', 'assets/images/apple_icon.png', iconIcon: Icons.apple)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-
                       // Link ke Login
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
                             'Sudah punya akun? ',
-                            style: TextStyle(fontSize: 13, color: AppColors.black50),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.black50,
+                            ),
                           ),
                           GestureDetector(
                             onTap: () {
                               Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginScreen(),
+                                ),
                               );
                             },
                             child: const Text(
@@ -283,7 +278,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.black100)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: AppColors.black100,
+          ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
@@ -317,7 +319,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.black100)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: AppColors.black100,
+          ),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
@@ -325,9 +334,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(fontSize: 13, color: AppColors.black50),
-            prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.black50, size: 20),
+            prefixIcon: const Icon(
+              Icons.lock_outline_rounded,
+              color: AppColors.black50,
+              size: 20,
+            ),
             suffixIcon: IconButton(
-              icon: Icon(isVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.black50, size: 20),
+              icon: Icon(
+                isVisible
+                    ? Icons.visibility_off_outlined
+                    : Icons.visibility_outlined,
+                color: AppColors.black50,
+                size: 20,
+              ),
               onPressed: onVisibilityChanged,
             ),
             contentPadding: const EdgeInsets.symmetric(vertical: 14),
@@ -342,31 +361,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildSocialButton(String label, String imagePath, {IconData? iconIcon}) {
-    return OutlinedButton(
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        side: const BorderSide(color: AppColors.alto),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      onPressed: () {},
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (iconIcon != null)
-            Icon(iconIcon, color: AppColors.black100, size: 20)
-          else
-            const Icon(Icons.g_mobiledata, color: AppColors.black100, size: 24),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.black100),
-          ),
-        ],
-      ),
     );
   }
 }
